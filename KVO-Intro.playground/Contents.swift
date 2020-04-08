@@ -31,12 +31,13 @@ import UIKit
 }
 
 // observer class one
-class DogWalker {
+class DogWalker { // class vc1
     let dog: Dog
     var birthdayObservation: NSKeyValueObservation? // a handle for the property being observed
     
     init(dog: Dog)  {
         self.dog = dog
+        configureBirthdayObservation()
     }
     
     private func configureBirthdayObservation() {
@@ -44,14 +45,45 @@ class DogWalker {
         // \. = keypass for kvo
         // dog value, and change property will have values for age new and old
         birthdayObservation = dog.observe(\.age, options: [.old, .new], changeHandler: { (dog, change) in
-            <#code#>
+            guard let age = change.newValue else    {
+                return
+            }
+            print("hey \(dog.name), hbd \(age) walker")
+            print("dw: \(change.oldValue ?? 0), \(change.newValue ?? 0)")
         })
     }
 }
 
+// 2 classes observing same property, will get same value when change is made
+// otherwise wuda used custom del or completion handler
 // observer class 2
 class DogGroomer    {
+    let dog: Dog
+    var birthdayObservarion: NSKeyValueObservation?
     
+    init(dog: Dog)  {
+        self.dog = dog
+        configureBirthdayObservation()
+    }
+    
+    private func configureBirthdayObservation() {
+        birthdayObservarion = dog.observe(\.age, options: [.old, .new], changeHandler: { (dog, change) in
+            // unwrap the new value property on change as it's optional
+            guard let age = change.newValue else    {return}
+            print("hey \(dog.name), hbd \(age) groomer")
+            print("dg: \(change.oldValue ?? 0), \(change.newValue ?? 0)")
+        })
+    }
 }
+
+//  test out KVO observing on the .age property of Dog
+//  both classes get .age changes
+
+let snoopy = Dog(name: "Snoopy", age: 5)
+let dogWalker = DogWalker(dog: snoopy)
+let dogGroomer = DogGroomer(dog: snoopy) // both reference to snoopy
+
+snoopy.age += 1 // 5 to 6, run when changes execute code in handler
+
 
 
